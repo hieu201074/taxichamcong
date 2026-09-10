@@ -268,7 +268,7 @@ def init_db():
                  must_change_password,created_at)
                 VALUES (?,?,?,?,?,?,?,?,?)
             """, (
-                "apple",
+                "admin",
                 hash_password("admin123"),
                 "Ban Quản Trị",
                 "Apple Biết Bay",
