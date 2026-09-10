@@ -179,7 +179,7 @@ def login_page():
 
     with tab_login:
         with st.form("login_form"):
-            username = st.text_input("Tài khoản", placeholder="Nhập tài khoản")
+            username = st.text_input("Tài khoản", placeholder="Số MOMO (ID) Trong Game")
             password = st.text_input("Mật khẩu", type="password", placeholder="Nhập mật khẩu")
             submit = st.form_submit_button("ĐĂNG NHẬP", use_container_width=True)
 
@@ -273,7 +273,7 @@ def sidebar():
         elif site_logo and os.path.exists(site_logo):
             st.image(site_logo, width=90)
         else:
-            st.markdown('<div style="text-align:center;font-size:45px;">🚕</div>', unsafe_allow_html=True)
+            st.markdown('<div style="text-align:center;font-size:45px;">🌈</div>', unsafe_allow_html=True)
 
         st.markdown(f"""
         <div style="text-align:center;padding:5px 0 15px;border-bottom:1px solid #292f37;">
@@ -287,7 +287,7 @@ def sidebar():
 
         options = []
         if user_has_permission(user, "view_dashboard"): options.append("🏠 Tổng quan")
-        if user_has_permission(user, "submit_trip"): options.append("📸 Đăng ảnh +1 chuyến")
+        if user_has_permission(user, "submit_trip"): options.append("📸 Chấm Công (NPC)")
         if user_has_permission(user, "view_leaderboard"): options.append("🏆 BXH tài xế")
         if user_has_permission(user, "view_history"): options.append("📋 Lịch sử chuyến")
         if user_has_permission(user, "view_posts"): options.append("📢 Thông báo")
@@ -355,7 +355,7 @@ def page_dashboard():
 
     st.markdown(f"""
     <div class="hero">
-        <div class="hero-title">🚕 XIN CHÀO, TÀI XẾ</div>
+        <div class="hero-title">🌈 XIN CHÀO,TÀI XẾ</div>
         <div class="hero-text">{esc(home_text)}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -389,7 +389,7 @@ def page_upload():
     count = get_today_trip_count(user["id"])
     st.markdown("""
     <div class="hero">
-        <div class="hero-title">📸 ĐĂNG ẢNH CHUYẾN ĐI</div>
+        <div class="hero-title">📸 ĐĂNG ẢNH CHUYẾN (NPC) </div>
         <div class="hero-text">Tải ảnh bằng chứng chuyến xe. Sau khi Admin duyệt, hệ thống sẽ cộng +1 chuyến.</div>
     </div>
     """, unsafe_allow_html=True)
@@ -469,7 +469,7 @@ def admin_users():
             c1,c2 = st.columns(2)
             with c1:
                 full_name = st.text_input("Họ và tên")
-                username = st.text_input("Tên đăng nhập")
+                username = st.text_input("Số MOMO (ID)")
                 password = st.text_input("Mật khẩu", type="password")
             with c2:
                 role = st.selectbox("Role", role_keys, format_func=lambda x: next((r["name"] for r in roles if r["role_key"]==x), x))
@@ -482,7 +482,7 @@ def admin_users():
                 st.success(msg) if ok else st.error(msg)
                 if ok: st.rerun()
 
-    with st.expander("👤 TẠO ADMIN NHANH"):
+    with st.expander("👤 TẠO TÀI KHOẢN QUẢN LÝ"):
         with st.form("create_admin_form"):
             u = st.text_input("Tên Admin")
             n = st.text_input("Họ tên Admin")
@@ -727,7 +727,7 @@ def main():
 
     if not st.session_state.logged_in:
         login_page()
-        st.markdown('<div class="footer">🚕 LOS SANTOS TAXI • TAXI DISPATCH SYSTEM</div>',unsafe_allow_html=True)
+        st.markdown('<div class="footer">🌈 TAXI CẦU VỒNG • WEB CHẤM CÔNG</div>',unsafe_allow_html=True)
         return
 
     user = get_user(st.session_state.user["id"]) or st.session_state.user
@@ -735,7 +735,7 @@ def main():
 
     if force_password_change():
         st.markdown(
-            '<div class="footer">🚕 LOS SANTOS TAXI • Vui lòng đổi mật khẩu tạm thời</div>',
+            '<div class="footer">🌈 TAXI CẦU VỒNG • Vui lòng đổi mật khẩu tạm thời</div>',
             unsafe_allow_html=True,
         )
         return
@@ -764,7 +764,7 @@ def main():
 
     st.markdown("""
     <div class="footer">
-        🚕 LOS SANTOS TAXI • Hệ thống đang hoạt động • Daily reset: 02:00 GMT+7
+        🌈 Taxi Cầu Vồng • Hệ thống đang hoạt động • Daily reset: 02:00 GMT+7
     </div>
     """,unsafe_allow_html=True)
 
