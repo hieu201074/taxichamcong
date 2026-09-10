@@ -170,8 +170,8 @@ def login_page():
     st.markdown(f"""
     <div class="login-box">
         <div style="text-align:center;margin-bottom:10px;">{logo_block}</div>
-        <div class="login-title">LOS SANTOS TAXI</div>
-        <div class="login-sub">TAXI DISPATCH MANAGEMENT SYSTEM</div>
+        <div class="login-title">TAXI CẦU VỒNG</div>
+        <div class="login-sub">TAXI CHẤM CÔNG</div>
     </div>
     """, unsafe_allow_html=True)
 
