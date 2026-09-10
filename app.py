@@ -17,8 +17,8 @@ from database import (
 )
 
 st.set_page_config(
-    page_title="Los Santos Taxi",
-    page_icon="🚕",
+    page_title="Taxi Cầu Vồng",
+    page_icon="🌈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
