@@ -161,11 +161,11 @@ def login_page():
 
     if logo_uri:
         logo_block = (
-            f'<img src="{logo_uri}" alt="Los Santos Taxi" '
+            f'<img src="{logo_uri}" alt="Taxi Cầu Vồng" '
             'style="width:110px;height:110px;object-fit:contain;border-radius:18px;">'
         )
     else:
-        logo_block = '<div class="login-logo">🚕</div>'
+        logo_block = '<div class="login-logo">🌈</div>'
 
     st.markdown(f"""
     <div class="login-box">
