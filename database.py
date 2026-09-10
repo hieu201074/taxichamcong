@@ -270,8 +270,8 @@ def init_db():
             """, (
                 "admin",
                 hash_password("admin123"),
-                "Ban Quản Trị",
-                "Apple Biết Bay",
+                "administrator",
+                "admin",
                 1, 0, 1, 1,
                 now().isoformat(),
             ))
