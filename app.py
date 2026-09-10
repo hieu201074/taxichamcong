@@ -6,7 +6,7 @@ from datetime import datetime
 import streamlit as st
 
 from database import (
-    init_db, login_user, get_user, create_user, create_admin_account,
+    init_db, login_user, get_user, create_user,
     get_all_users, approve_user, reject_user, delete_user, update_user,
     change_password, set_duty, get_online_drivers, get_today_trip_count,
     get_total_approved_trips, add_trip, get_user_trips, get_all_trips,
