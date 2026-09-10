@@ -26,12 +26,12 @@ DEFAULT_PERMISSIONS = {
 
 DEFAULT_ROLES = {
     "admin": {
-        "name": "Administrator",
+        "name": "Ban Quản Trị",
         "description": "Toàn quyền hệ thống",
         "permissions": list(DEFAULT_PERMISSIONS.keys()),
     },
     "manager": {
-        "name": "Manager",
+        "name": "Thư Ký",
         "description": "Quản lý tài xế, chuyến và bài đăng",
         "permissions": [
             "view_dashboard", "submit_trip", "view_history", "view_leaderboard",
@@ -40,7 +40,7 @@ DEFAULT_ROLES = {
         ],
     },
     "driver": {
-        "name": "Taxi Driver",
+        "name": "Tài Xế",
         "description": "Tài khoản tài xế",
         "permissions": [
             "view_dashboard", "submit_trip", "view_history",
@@ -49,8 +49,8 @@ DEFAULT_ROLES = {
     },
     # Giữ tương thích tài khoản cũ có role=user.
     "user": {
-        "name": "Taxi Driver",
-        "description": "Role cũ, tương đương tài xế",
+        "name": "Taxi Thử Việc",
+        "description": "Role Thử Việc ",
         "permissions": [
             "view_dashboard", "submit_trip", "view_history",
             "view_leaderboard", "view_posts",
@@ -239,10 +239,10 @@ def _seed_roles(conn):
 
 def _seed_settings(conn):
     defaults = {
-        "site_title": "LOS SANTOS TAXI",
-        "site_subtitle": "TAXI DISPATCH SYSTEM",
-        "home_text": "Hệ thống quản lý tài xế Taxi Los Santos",
-        "contact": "Liên hệ quản lý Taxi để được hỗ trợ.",
+        "site_title": "TAXI CẦU VỒNG",
+        "site_subtitle": "WEB CHẤM CÔNG",
+        "home_text": "Hệ thống quản lý tài xế Taxi Cầu Vồng",
+        "contact": "Liên Hệ Discord Soigia2000 để được hỗ trợ.",
     }
     for key, value in defaults.items():
         conn.execute(
@@ -268,7 +268,7 @@ def init_db():
                  must_change_password,created_at)
                 VALUES (?,?,?,?,?,?,?,?,?)
             """, (
-                "admin",
+                "Apple Biết Bay",
                 hash_password("admin123"),
                 "Administrator",
                 "Apple Biết Bay",
@@ -305,7 +305,7 @@ def login_user(username, password):
     if not user["active"]:
         return None, "Tài khoản đã bị khóa."
     if not user["approved"]:
-        return None, "Tài khoản chưa được Admin duyệt."
+        return None, "Tài khoản chưa được BQT duyệt."
 
     return _row_dict(user), None
 
