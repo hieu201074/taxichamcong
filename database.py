@@ -271,7 +271,7 @@ def init_db():
                 "admin",
                 hash_password("admin123"),
                 "Administrator",
-                "admin",
+                "Apple Biết Bay",
                 1, 0, 1, 1,
                 now().isoformat(),
             ))
