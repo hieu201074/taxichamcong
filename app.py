@@ -1,5 +1,7 @@
 import os
 import html
+import base64
+import mimetypes
 from datetime import datetime
 import streamlit as st
 
@@ -38,6 +40,43 @@ def save_uploaded(uploaded, prefix):
     with open(path, "wb") as f:
         f.write(uploaded.getbuffer())
     return path
+
+
+
+def image_data_uri(path):
+    """Return a browser-safe data URI for local images."""
+    if not path or not os.path.exists(path):
+        return ""
+    try:
+        mime = mimetypes.guess_type(path)[0] or "image/png"
+        with open(path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("ascii")
+        return f"data:{mime};base64,{encoded}"
+    except (OSError, ValueError):
+        return ""
+
+
+def can_toggle_own_duty(user):
+    """Preserve the old driver ON/OFF duty feature while allowing admins/managers too."""
+    return (
+        user_has_permission(user, "manage_duty")
+        or str(user.get("role", "")).lower() in {"driver", "user"}
+    )
+
+
+def has_admin_access(user):
+    """A user can enter the admin area if they have any admin-panel capability."""
+    admin_permissions = (
+        "manage_users",
+        "manage_roles",
+        "approve_users",
+        "approve_trips",
+        "manage_posts",
+        "view_duty",
+        "manage_media",
+        "manage_website",
+    )
+    return any(user_has_permission(user, p) for p in admin_permissions)
 
 
 def load_css():
@@ -117,9 +156,20 @@ def load_css():
 
 
 def login_page():
-    st.markdown("""
+    logo = get_media("site_logo", "")
+    logo_uri = image_data_uri(logo)
+
+    if logo_uri:
+        logo_block = (
+            f'<img src="{logo_uri}" alt="Los Santos Taxi" '
+            'style="width:110px;height:110px;object-fit:contain;border-radius:18px;">'
+        )
+    else:
+        logo_block = '<div class="login-logo">🚕</div>'
+
+    st.markdown(f"""
     <div class="login-box">
-        <div class="login-logo">🚕</div>
+        <div style="text-align:center;margin-bottom:10px;">{logo_block}</div>
         <div class="login-title">LOS SANTOS TAXI</div>
         <div class="login-sub">TAXI DISPATCH MANAGEMENT SYSTEM</div>
     </div>
@@ -132,30 +182,83 @@ def login_page():
             username = st.text_input("Tài khoản", placeholder="Nhập tài khoản")
             password = st.text_input("Mật khẩu", type="password", placeholder="Nhập mật khẩu")
             submit = st.form_submit_button("ĐĂNG NHẬP", use_container_width=True)
+
             if submit:
-                user, error = login_user(username, password)
-                if error:
-                    st.error(error)
+                if not username.strip() or not password:
+                    st.error("Vui lòng nhập đầy đủ tài khoản và mật khẩu.")
                 else:
-                    st.session_state.logged_in = True
-                    st.session_state.user = user
-                    st.rerun()
+                    user, error = login_user(username.strip(), password)
+                    if error:
+                        st.error(error)
+                    else:
+                        st.session_state.logged_in = True
+                        st.session_state.user = user
+                        st.rerun()
 
     with tab_register:
         with st.form("register_form"):
             full_name = st.text_input("Họ và tên", placeholder="Nguyễn Văn A")
-            username = st.text_input("Tài khoản")
+            username = st.text_input("Tài khoản", placeholder="taxidriver01")
             password = st.text_input("Mật khẩu", type="password")
             password2 = st.text_input("Nhập lại mật khẩu", type="password")
-            avatar = st.file_uploader("Ảnh đại diện", type=["png","jpg","jpeg","webp"], key="register_avatar")
+            avatar = st.file_uploader(
+                "Ảnh đại diện",
+                type=["png", "jpg", "jpeg", "webp"],
+                key="register_avatar",
+            )
             submit = st.form_submit_button("ĐĂNG KÝ TÀI KHOẢN", use_container_width=True)
+
             if submit:
-                if password != password2:
+                if not full_name.strip() or not username.strip() or not password:
+                    st.error("Vui lòng nhập đủ họ tên, tài khoản và mật khẩu.")
+                elif password != password2:
                     st.error("Hai mật khẩu không giống nhau.")
+                elif len(password) < 6:
+                    st.error("Mật khẩu phải có ít nhất 6 ký tự.")
                 else:
                     avatar_path = save_uploaded(avatar, "avatar") if avatar else ""
-                    ok, message = create_user(username, password, full_name, "driver", False, avatar_path)
-                    st.success(message) if ok else st.error(message)
+                    ok, message = create_user(
+                        username.strip(),
+                        password,
+                        full_name.strip(),
+                        "driver",
+                        False,
+                        avatar_path,
+                    )
+                    if ok:
+                        st.success(message)
+                    else:
+                        st.error(message)
+
+def force_password_change():
+    """Require the default/admin-created temporary password to be changed."""
+    user = st.session_state.user
+    if not user.get("must_change_password"):
+        return False
+
+    st.warning("🔐 Bạn đang dùng mật khẩu tạm thời. Hãy đổi mật khẩu trước khi tiếp tục.")
+    with st.form("force_change_password"):
+        old_password = st.text_input("Mật khẩu hiện tại", type="password")
+        new_password = st.text_input("Mật khẩu mới", type="password")
+        confirm = st.text_input("Nhập lại mật khẩu mới", type="password")
+        submit = st.form_submit_button("💾 ĐỔI MẬT KHẨU", use_container_width=True)
+
+        if submit:
+            if not old_password or not new_password:
+                st.error("Vui lòng nhập đầy đủ thông tin.")
+            elif new_password != confirm:
+                st.error("Hai mật khẩu mới không giống nhau.")
+            elif len(new_password) < 6:
+                st.error("Mật khẩu mới phải có ít nhất 6 ký tự.")
+            else:
+                ok, message = change_password(user["id"], old_password, new_password)
+                if ok:
+                    st.session_state.user = get_user(user["id"]) or user
+                    st.success("Đổi mật khẩu thành công.")
+                    st.rerun()
+                else:
+                    st.error(message)
+    return True
 
 
 def sidebar():
@@ -164,8 +267,11 @@ def sidebar():
 
     with st.sidebar:
         avatar = user.get("avatar", "")
+        site_logo = get_media("site_logo", "")
         if avatar and os.path.exists(avatar):
             st.image(avatar, width=75)
+        elif site_logo and os.path.exists(site_logo):
+            st.image(site_logo, width=90)
         else:
             st.markdown('<div style="text-align:center;font-size:45px;">🚕</div>', unsafe_allow_html=True)
 
@@ -198,7 +304,7 @@ def sidebar():
                 <div style="color:#8b969f;font-size:11px;">Bạn đang nhận chuyến</div>
             </div>
             """, unsafe_allow_html=True)
-            if user_has_permission(user, "manage_duty") and st.button("🔴 OFF DUTY", use_container_width=True):
+            if can_toggle_own_duty(user) and st.button("🔴 OFF DUTY", use_container_width=True):
                 set_duty(user["id"], False); st.rerun()
         else:
             st.markdown("""
@@ -207,7 +313,7 @@ def sidebar():
                 <div style="color:#8b969f;font-size:11px;">Bạn chưa nhận chuyến</div>
             </div>
             """, unsafe_allow_html=True)
-            if user_has_permission(user, "manage_duty") and st.button("🟢 ON DUTY", use_container_width=True):
+            if can_toggle_own_duty(user) and st.button("🟢 ON DUTY", use_container_width=True):
                 set_duty(user["id"], True); st.rerun()
 
         st.markdown("---")
@@ -221,19 +327,23 @@ def page_header():
     title = get_setting("site_title", "LOS SANTOS TAXI")
     subtitle = get_setting("site_subtitle", "TAXI DISPATCH SYSTEM")
     logo = get_media("site_logo", "")
+    logo_uri = image_data_uri(logo)
 
     logo_html = ""
-    if logo and os.path.exists(logo):
-        logo_html = f'<img src="data:image/png;base64,{__import__("base64").b64encode(open(logo,"rb").read()).decode()}" style="height:45px;vertical-align:middle;margin-right:10px;">'
+    if logo_uri:
+        logo_html = (
+            f'<img src="{logo_uri}" alt="Logo" '
+            'style="height:55px;width:55px;object-fit:contain;'
+            'vertical-align:middle;margin-right:12px;border-radius:10px;">'
+        )
 
     st.markdown(f"""
     <div class="taxi-header">
-        <div class="taxi-logo">{logo_html}🚕 {esc(title)}</div>
+        <div class="taxi-logo">{logo_html}{esc(title)}</div>
         <div class="taxi-title">{esc(subtitle)}</div>
         <div class="taxi-subtitle">LOS SANTOS • TAXI MANAGEMENT</div>
     </div>
     """, unsafe_allow_html=True)
-
 
 def page_dashboard():
     user = st.session_state.user
@@ -340,7 +450,8 @@ def page_posts():
     posts = get_posts()
     if not posts: st.info("Chưa có thông báo."); return
     for post in posts:
-        st.markdown(f"### {"📌 " if post["pinned"] else ""}{esc(post["title"])}")
+        prefix = "📌 " if post["pinned"] else ""
+        st.markdown(f"### {prefix}{esc(post['title'])}")
         st.caption(post["created_at"][:19].replace("T"," "))
         st.write(post["content"])
         if post.get("image") and os.path.exists(post["image"]): st.image(post["image"], use_container_width=True)
@@ -514,27 +625,52 @@ def admin_posts():
 
 def admin_media():
     st.markdown("### 🖼️ QUẢN LÝ HÌNH ẢNH")
-    st.caption("Thêm logo, banner và ảnh trang chủ. Các ảnh này được lưu cùng hệ thống uploads/.")
+    st.caption("Logo chính và banner được lưu trong thư mục uploads/.")
 
-    current_logo = get_media("site_logo","")
-    current_banner = get_media("home_banner","")
+    current_logo = get_media("site_logo", "")
+    current_banner = get_media("home_banner", "")
 
-    c1,c2=st.columns(2)
+    c1, c2 = st.columns(2)
+
     with c1:
-        st.markdown("#### 🚕 Logo")
-        if current_logo and os.path.exists(current_logo): st.image(current_logo,use_container_width=True)
-        logo=st.file_uploader("Chọn logo",type=["png","jpg","jpeg","webp"],key="site_logo_upload")
-        if st.button("💾 LƯU LOGO",key="save_logo"):
-            if logo: set_media("site_logo",save_uploaded(logo,"site_logo"),"Logo")
-            st.rerun()
+        st.markdown("#### 🚕 Logo chính")
+        if current_logo and os.path.exists(current_logo):
+            st.image(current_logo, use_container_width=True)
+        with st.form("logo_form", clear_on_submit=False):
+            logo = st.file_uploader(
+                "Chọn logo",
+                type=["png", "jpg", "jpeg", "webp"],
+                key="site_logo_upload",
+            )
+            save_logo = st.form_submit_button("💾 LƯU LOGO", use_container_width=True)
+            if save_logo:
+                if not logo:
+                    st.warning("Chưa chọn ảnh logo.")
+                else:
+                    path = save_uploaded(logo, "site_logo")
+                    set_media("site_logo", path, "Logo chính")
+                    st.success("Đã lưu logo chính.")
+                    st.rerun()
+
     with c2:
         st.markdown("#### 🖼️ Banner trang chủ")
-        if current_banner and os.path.exists(current_banner): st.image(current_banner,use_container_width=True)
-        banner=st.file_uploader("Chọn banner",type=["png","jpg","jpeg","webp"],key="home_banner_upload")
-        if st.button("💾 LƯU BANNER",key="save_banner"):
-            if banner: set_media("home_banner",save_uploaded(banner,"home_banner"),"Banner")
-            st.rerun()
-
+        if current_banner and os.path.exists(current_banner):
+            st.image(current_banner, use_container_width=True)
+        with st.form("banner_form", clear_on_submit=False):
+            banner = st.file_uploader(
+                "Chọn banner",
+                type=["png", "jpg", "jpeg", "webp"],
+                key="home_banner_upload",
+            )
+            save_banner = st.form_submit_button("💾 LƯU BANNER", use_container_width=True)
+            if save_banner:
+                if not banner:
+                    st.warning("Chưa chọn ảnh banner.")
+                else:
+                    path = save_uploaded(banner, "home_banner")
+                    set_media("home_banner", path, "Banner trang chủ")
+                    st.success("Đã lưu banner.")
+                    st.rerun()
 
 def admin_duty():
     st.markdown("### 🟢 TÀI XẾ ĐANG ON DUTY")
@@ -594,20 +730,34 @@ def main():
         st.markdown('<div class="footer">🚕 LOS SANTOS TAXI • TAXI DISPATCH SYSTEM</div>',unsafe_allow_html=True)
         return
 
-    menu=sidebar()
+    user = get_user(st.session_state.user["id"]) or st.session_state.user
+    st.session_state.user = user
+
+    if force_password_change():
+        st.markdown(
+            '<div class="footer">🚕 LOS SANTOS TAXI • Vui lòng đổi mật khẩu tạm thời</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    menu = sidebar()
     page_header()
 
-    user=st.session_state.user
     routes={
         "🏠 Tổng quan":("view_dashboard",page_dashboard),
         "📸 Đăng ảnh +1 chuyến":("submit_trip",page_upload),
         "🏆 BXH tài xế":("view_leaderboard",page_leaderboard),
         "📋 Lịch sử chuyến":("view_history",page_history),
         "📢 Thông báo":("view_posts",page_posts),
-        "🛠️ ADMIN":("manage_users",admin_page),
+        "🛠️ ADMIN":("admin_panel",admin_page),
     }
-    permission, fn=routes.get(menu,(None,page_dashboard))
-    if permission and not user_has_permission(user,permission):
+    permission, fn = routes.get(menu, (None, page_dashboard))
+    if permission == "admin_panel":
+        if not has_admin_access(user):
+            st.error("Bạn không có quyền sử dụng chức năng này.")
+        else:
+            fn()
+    elif permission and not user_has_permission(user, permission):
         st.error("Bạn không có quyền sử dụng chức năng này.")
     else:
         fn()
