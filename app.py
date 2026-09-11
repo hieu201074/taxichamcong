@@ -555,7 +555,7 @@ def top_navigation():
     user = get_user(st.session_state.user["id"]) or st.session_state.user
     options = []
     if user_has_permission(user, "view_dashboard"): options.append(("📣", "THÔNG TIN", "🏠 Tổng quan"))
-    if user_has_permission(user, "submit_trip"): options.append(("📚", "TÀI LIỆU", "📸 Gửi ảnh chuyến xe"))
+    if user_has_permission(user, "submit_trip"): options.append(("📚", "ĐĂNG ẢNH CHUYẾN XE", "📸 Gửi ảnh chuyến xe"))
     if user_has_permission(user, "view_history"): options.append(("📝", "LỊCH SỬ", "📋 Lịch sử chấm công"))
     if user_has_permission(user, "view_leaderboard"): options.append(("🏆", "XẾP HẠNG", "🏆 Xếp hạng tài xế"))
     if user_has_permission(user, "view_posts"): options.append(("📢", "THÔNG BÁO", "📢 Thông báo"))
@@ -622,7 +622,7 @@ def page_dashboard():
         st.image(banner, use_container_width=True)
 
     c1,c2,c3,c4 = st.columns(4)
-    with c1: st.markdown(f'<div class="stat-card"><div class="stat-number">{today}/50</div><div class="stat-label">Chuyến hôm nay</div></div>', unsafe_allow_html=True)
+    with c1: st.markdown(f'<div class="stat-card"><div class="stat-number">{today}/300</div><div class="stat-label">Chuyến hôm nay</div></div>', unsafe_allow_html=True)
     with c2: st.markdown(f'<div class="stat-card"><div class="stat-number">{total}</div><div class="stat-label">Tổng chuyến</div></div>', unsafe_allow_html=True)
     with c3: st.markdown(f'<div class="stat-card"><div class="stat-number">{online}</div><div class="stat-label">Tài xế đang làm việc</div></div>', unsafe_allow_html=True)
     with c4: st.markdown(f'<div class="stat-card"><div class="stat-number">{max(0,50-today)}</div><div class="stat-label">Chuyến còn lại</div></div>', unsafe_allow_html=True)
@@ -651,7 +651,7 @@ def page_upload():
         <div class="hero-text">Tải ảnh bằng chứng chuyến xe. Sau khi Admin duyệt, hệ thống sẽ cộng +1 chuyến.</div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown(f"### 🚕 Tiến độ hôm nay: `{count}/50` chuyến")
+    st.markdown(f"### 🚕 Tiến độ hôm nay: `{count}/300` chuyến")
     if count >= 50:
         st.error("🚫 Bạn đã đạt tối đa 50 chuyến trong ngày."); return
 
